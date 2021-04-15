@@ -3,6 +3,8 @@ package utils;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class FileUtils {
@@ -15,13 +17,40 @@ public class FileUtils {
         }
     }
 
+    public static void createFolder(String path) {
+        try {
+            File file = new File(path);
+            file.mkdir();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static boolean folderExists(String path) {
+        try {
+            File file = new File(path);
+            return file.exists() && file.isDirectory();
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public static boolean fileExists(String path) {
+        try {
+            File file = new File(path);
+            return file.exists() && file.isFile();
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
     public static void writeLineToFile(String filePath, boolean writeToNewLine, String... args) {
         if(writeToNewLine) goToNewLine(filePath);
         String line = String.join(",", args);
         appendToFile(filePath, line);
     }
 
-    public static void goToNewLine(String filepath) {
+    private static void goToNewLine(String filepath) {
         appendToFile(filepath, "\n");
     }
 
