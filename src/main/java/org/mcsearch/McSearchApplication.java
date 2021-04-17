@@ -1,6 +1,6 @@
 package org.mcsearch;
 
-import org.mcsearch.mapper.WordToFileMapBuilder;
+import org.mcsearch.mapper.WordToFileMap;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -13,7 +13,7 @@ public class McSearchApplication {
 
 	public static void main(String[] args) {
 		ApplicationContext context = SpringApplication.run(McSearchApplication.class, args);
-		boolean success =  WordToFileMapBuilder.buildWordToFileMapping();
+		boolean success =  WordToFileMap.buildMap();
 
 		if(success) {
 			logger.info("Mapping successfully loaded");

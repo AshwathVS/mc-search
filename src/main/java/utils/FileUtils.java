@@ -64,9 +64,9 @@ public class FileUtils {
         }
     }
 
-    public static String readNthLine(int n, String path) {
+    public static String readNthLine(String filePath, int n) {
         String line = null;
-        try (Stream<String> lines = Files.lines(Paths.get(path))) {
+        try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             if(n > 0) line = lines.skip(n-1).findFirst().get();
             else line = lines.findFirst().get();
         } catch (IOException ex) {

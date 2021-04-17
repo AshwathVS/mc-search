@@ -20,7 +20,7 @@ public class StatTesting {
                 int line = randomNumber(min, max);
                 String file = filenames[randomNumber(0, filenames.length-1)];
                 Date start = new Date();
-                FileUtils.readNthLine(line, path + file);
+                FileUtils.readNthLine(path + file, line);
                 Date end = new Date();
                 long timeDiff = (end.getTime() - start.getTime());
 //                System.out.println("Time taken reading for " + line + "th line: " + timeDiff + "ms");

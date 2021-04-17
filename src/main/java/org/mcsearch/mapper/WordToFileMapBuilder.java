@@ -9,11 +9,10 @@ import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 public class WordToFileMapBuilder {
-    private static final String INDEX_FOLDER = "./index/";
-    private static final String CACHE_FOLDER = "./cache/";
+    public static final String INDEX_FOLDER = "./index/";
+    public static final String CACHE_FOLDER = "./cache/";
     private static final String WORD_FILE_LINE_MAPPING_FILE_NAME = "WORD_TO_FILE_LINE_MAPPING";
     private static final String WORD_FILE_LINE_MAPPING_FILE_PATH = CACHE_FOLDER + WORD_FILE_LINE_MAPPING_FILE_NAME;
-    private static Map<String, Pair<String, Integer>> WORD_FILE_LINE_MAP = null;
     private static final Logger logger = Logger.getLogger(WordToFileMapBuilder.class.getName());
 
     private static Map<String, Pair<String, Integer>> fetchWordVsFileLineOccurrence(String path) throws Exception {
@@ -45,7 +44,7 @@ public class WordToFileMapBuilder {
         return concurrentMap;
     }
 
-    private static void buildAndPersist() throws Exception {
+    private static Map<String, Pair<String, Integer>> buildAndPersist() throws Exception {
         Map<String, Pair<String, Integer>> wordToFileLineMapping = fetchWordVsFileLineOccurrence(INDEX_FOLDER);
 
         // check if cache folder exists and create one if not
@@ -54,29 +53,30 @@ public class WordToFileMapBuilder {
         // persist map object to local
         FileUtils.writeToFile(WORD_FILE_LINE_MAPPING_FILE_PATH, wordToFileLineMapping);
 
-        WORD_FILE_LINE_MAP = wordToFileLineMapping;
+        return wordToFileLineMapping;
     }
 
-    private static void loadMappingFromLocalFile() {
-        WORD_FILE_LINE_MAP = FileUtils.readFromFile(WORD_FILE_LINE_MAPPING_FILE_PATH);
+    private static Map<String, Pair<String, Integer>> loadMappingFromLocalFile() {
+        return FileUtils.readFromFile(WORD_FILE_LINE_MAPPING_FILE_PATH);
     }
 
-    public static boolean buildWordToFileMapping() {
+    public static Map<String, Pair<String, Integer>> buildWordToFileMapping() {
         try {
+            Map<String, Pair<String, Integer>> wordToFileLineMap = null;
             // check if cache folder exists and load from local if file exists
             if (FileUtils.folderExists(CACHE_FOLDER) && FileUtils.fileExists(WORD_FILE_LINE_MAPPING_FILE_PATH)) {
                 logger.info("Cached mapping exists, loading mapping from cache");
-                loadMappingFromLocalFile();
+                wordToFileLineMap = loadMappingFromLocalFile();
             } else {
                 // since the cache does not exist, we build the mapping again
                 logger.info("Unable to find cached mapping, building the mapping from scratch");
-                buildAndPersist();
+                wordToFileLineMap = buildAndPersist();
             }
-            return true;
+            return wordToFileLineMap;
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.severe("Unable to build mapping due to exceptions");
-            return false;
+            return null;
         }
     }
 
