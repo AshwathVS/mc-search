@@ -1,5 +1,9 @@
 package utils;
 
+import org.mcsearch.mapper.WordToFileMap;
+import org.mcsearch.search.IndexedWordData;
+import org.mcsearch.search.QueryHandler;
+
 import java.util.Date;
 
 public class StatTesting {
@@ -7,7 +11,7 @@ public class StatTesting {
         return (int)(Math.random() * (max - min + 1) + min);
     }
 
-    public static void main(String[] args) throws Exception {
+    private static void performReadTimeStats() {
         String path = "/home/ashwath/Documents/MapReduce Project/code/mc-search/index/";
         String[] filenames = new String[] {"xaa", "xab", "xac", "xad", "xae", "xaf", "xag", "xah", "xai", "xaj", "xak", "xal"};
 
@@ -31,5 +35,17 @@ public class StatTesting {
             totalAvg += (sum / 1000);
         }
         System.out.println("Total Avg: " + totalAvg);
+    }
+
+    private static void performSearchChecks() {
+        for(IndexedWordData.DocumentResult documentResult : QueryHandler.fetchQueryResults("\"Security flaws put virtually all phones computers at risk\"")) {
+            System.out.println(documentResult.getDocumentLink());
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        WordToFileMap.buildMap();
+        // performReadTimeStats();
+        performSearchChecks();
     }
 }
