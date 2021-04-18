@@ -1,10 +1,13 @@
-package utils;
+package org.mcsearch.utils;
 
 import org.mcsearch.mapper.WordToFileMap;
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class StatTesting {
     private static int randomNumber(int min, int max) {
@@ -13,7 +16,11 @@ public class StatTesting {
 
     private static void performReadTimeStats() {
         String path = "/home/ashwath/Documents/MapReduce Project/code/mc-search/index/";
-        String[] filenames = new String[] {"xaa", "xab", "xac", "xad", "xae", "xaf", "xag", "xah", "xai", "xaj", "xak", "xal"};
+
+        File[] filesInPath = new File(path).listFiles();
+        String[] filenames = new String[filesInPath.length];
+
+        for(int i=0; i<filesInPath.length; i++) filenames[i] = filesInPath[i].getAbsolutePath();
 
         long totalAvg = 0;
         for(int m=0; m<100; m++) {
@@ -38,14 +45,14 @@ public class StatTesting {
     }
 
     private static void performSearchChecks() {
-        for(IndexedWordData.DocumentResult documentResult : QueryHandler.fetchQueryResults("\"Security flaws put virtually all phones computers at risk\"")) {
+        for(IndexedWordData.DocumentResult documentResult : QueryHandler.fetchQueryResults("news")) {
             System.out.println(documentResult.getDocumentLink());
         }
     }
 
     public static void main(String[] args) throws Exception {
         WordToFileMap.buildMap();
-        // performReadTimeStats();
+//        performReadTimeStats();
         performSearchChecks();
     }
 }

@@ -1,4 +1,4 @@
-package utils;
+package org.mcsearch.utils;
 
 import java.util.HashSet;
 

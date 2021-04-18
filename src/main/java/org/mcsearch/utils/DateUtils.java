@@ -1,4 +1,4 @@
-package utils;
+package org.mcsearch.utils;
 
 import java.text.DateFormat;
 import java.text.ParseException;

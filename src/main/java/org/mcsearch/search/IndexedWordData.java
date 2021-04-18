@@ -1,7 +1,8 @@
 package org.mcsearch.search;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.util.CollectionUtils;
-import utils.RedisUtils;
+import org.mcsearch.utils.RedisUtils;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -71,6 +72,7 @@ public class IndexedWordData {
             this.domainRank = indexedDocumentData.domainRank;
         }
 
+        @JsonIgnore
         public String getDocumentHash() {
             return documentHash;
         }
@@ -92,9 +94,9 @@ public class IndexedWordData {
             DocumentResult dr = (DocumentResult) o;
 
             if(dr.domainRank == this.domainRank) {
-                return publishedDate.compareTo(dr.publishedDate);
+                return dr.publishedDate.compareTo(publishedDate);
             } else {
-                return dr.domainRank - this.domainRank;
+                return this.domainRank - dr.domainRank;
             }
         }
     }

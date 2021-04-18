@@ -1,7 +1,7 @@
 package org.mcsearch.mapper;
 
 import org.apache.commons.lang3.tuple.Pair;
-import utils.FileUtils;
+import org.mcsearch.utils.FileUtils;
 
 import java.io.File;
 import java.util.*;

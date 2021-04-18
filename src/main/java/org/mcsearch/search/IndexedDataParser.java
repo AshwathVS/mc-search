@@ -3,9 +3,9 @@ package org.mcsearch.search;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mcsearch.mapper.WordToFileMap;
 import org.mcsearch.mapper.WordToFileMapBuilder;
-import utils.DateUtils;
-import utils.FileUtils;
-import utils.StringUtils;
+import org.mcsearch.utils.DateUtils;
+import org.mcsearch.utils.FileUtils;
+import org.mcsearch.utils.StringUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

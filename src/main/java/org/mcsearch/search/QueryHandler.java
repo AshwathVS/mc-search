@@ -1,8 +1,8 @@
 package org.mcsearch.search;
 
 import org.springframework.util.CollectionUtils;
-import utils.BinarySearchUtils;
-import utils.StopWords;
+import org.mcsearch.utils.BinarySearchUtils;
+import org.mcsearch.utils.StopWords;
 
 import java.util.*;
 
@@ -60,6 +60,15 @@ public class QueryHandler {
         else {
             if (isStrict) return performStrictPositionalIndexCheck(indexedWordDataList);
             else return performPositionalIndexCheck(indexedWordDataList);
+        }
+    }
+
+    public static List<IndexedWordData.DocumentResult> fetchQueryResults(String query, int offset, int fetch) {
+        List<IndexedWordData.DocumentResult> queryResultList = fetchQueryResults(query);
+
+        if(queryResultList.size() < offset) return Arrays.asList();
+        else {
+            return queryResultList.subList(offset, Math.min(offset + fetch, queryResultList.size()));
         }
     }
 
