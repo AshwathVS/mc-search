@@ -100,4 +100,22 @@ public class IndexedWordData {
             }
         }
     }
+
+    public static class QueryResult {
+        private List<DocumentResult> documentResults;
+        private int totalResultsFound;
+
+        public QueryResult(List<DocumentResult> documentResults, int totalResultsFound) {
+            this.documentResults = documentResults;
+            this.totalResultsFound = totalResultsFound;
+        }
+
+        public List<DocumentResult> getDocumentResults() {
+            return documentResults;
+        }
+
+        public int getTotalResultsFound() {
+            return totalResultsFound;
+        }
+    }
 }

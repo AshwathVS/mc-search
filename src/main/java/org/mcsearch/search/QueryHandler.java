@@ -5,8 +5,11 @@ import org.mcsearch.utils.BinarySearchUtils;
 import org.mcsearch.utils.StopWords;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class QueryHandler {
+    private static final Logger logger = Logger.getLogger(QueryHandler.class.getName());
+
     private static Map<String, Integer> countOccurrences(List<IndexedWordData> indexedWordDataList) {
         Map<String, Integer> occurrences = new HashMap<>();
         for(IndexedWordData indexedWordData : indexedWordDataList) {
@@ -63,12 +66,13 @@ public class QueryHandler {
         }
     }
 
-    public static List<IndexedWordData.DocumentResult> fetchQueryResults(String query, int offset, int fetch) {
+    public static IndexedWordData.QueryResult fetchQueryResults(String query, int offset, int fetch) {
         List<IndexedWordData.DocumentResult> queryResultList = fetchQueryResults(query);
 
-        if(queryResultList.size() < offset) return Arrays.asList();
+        if(queryResultList.size() < offset) return null;
         else {
-            return queryResultList.subList(offset, Math.min(offset + fetch, queryResultList.size()));
+            List<IndexedWordData.DocumentResult> subQueryList = queryResultList.subList(offset, Math.min(offset + fetch, queryResultList.size()));
+            return new IndexedWordData.QueryResult(subQueryList, queryResultList.size());
         }
     }
 
@@ -79,16 +83,26 @@ public class QueryHandler {
         boolean isStrict = tokenizedResult.isStrict();
 
         if(CollectionUtils.isEmpty(tokenizedResult.getTokens())) {
+            logger.info("No results found for <" + query + ">");
             return List.of();
         } else {
             List<IndexedWordData.DocumentResult> queryResult = new ArrayList<>();
             List<IndexedWordData> indexedWordDataList = new ArrayList<>(tokenizedResult.getTokenCount());
 
+            long parseTimeTaken, calculationsTimeTaken;
+
+            long start = new Date().getTime();
             for(String token : tokenizedResult.getTokens()) {
                 if (!StopWords.isStopWord(token)) {
-                    indexedWordDataList.add(IndexedDataParser.parseInvertedIndexForWord(token));
+                    IndexedWordData indexedWordData = IndexedDataParser.parseInvertedIndexForWord(token);
+                    if(null != indexedWordData) {
+                        indexedWordDataList.add(indexedWordData);
+                    }
                 }
             }
+
+            parseTimeTaken = new Date().getTime() - start;
+            start = new Date().getTime();
 
             Map<String, Integer> documentVsOccurrenceCount = countOccurrences(indexedWordDataList);
             int requiredDocumentOccurrenceCount = indexedWordDataList.size();
@@ -107,9 +121,23 @@ public class QueryHandler {
                     }
                 }
             }
+            calculationsTimeTaken = new Date().getTime() - start;
+
+            logTimeStats(query, parseTimeTaken, calculationsTimeTaken);
 
             Collections.sort(queryResult);
             return queryResult;
         }
+    }
+
+    private static void logTimeStats(String query, long parseTimeTaken, long calculationsTimeTaken) {
+        logger.info(
+                "\n" +
+                        "Stats for <" + query + ">" +
+                        "\n" +
+                        "Reading and parsing inverted index file took " + parseTimeTaken + "ms" +
+                        "\n" +
+                        "Post parse calculations took " + calculationsTimeTaken + "ms"
+        );
     }
 }
