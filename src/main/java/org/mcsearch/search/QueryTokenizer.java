@@ -66,6 +66,7 @@ public class QueryTokenizer {
 
     public static QueryTokenizedResult tokenizeQuery(String query) {
         query = cleanse(query);
+
         boolean isStrict = isStrictQuery(query);
 
         // remove trailing special characters...

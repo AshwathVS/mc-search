@@ -12,4 +12,12 @@ public class DateUtils {
             return new Date(Long.MIN_VALUE);
         }
     }
+
+    public static long getCurrentTime() {
+        return new Date().getTime();
+    }
+
+    public static long getTimeDiffFromNow(long start) {
+        return new Date().getTime() - start;
+    }
 }

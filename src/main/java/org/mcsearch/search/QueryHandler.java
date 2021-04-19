@@ -1,5 +1,6 @@
 package org.mcsearch.search;
 
+import org.mcsearch.utils.DateUtils;
 import org.springframework.util.CollectionUtils;
 import org.mcsearch.utils.BinarySearchUtils;
 import org.mcsearch.utils.StopWords;
@@ -91,7 +92,7 @@ public class QueryHandler {
 
             long parseTimeTaken, calculationsTimeTaken;
 
-            long start = new Date().getTime();
+            long start = DateUtils.getCurrentTime();
             for(String token : tokenizedResult.getTokens()) {
                 if (!StopWords.isStopWord(token)) {
                     IndexedWordData indexedWordData = IndexedDataParser.parseInvertedIndexForWord(token);
@@ -101,8 +102,8 @@ public class QueryHandler {
                 }
             }
 
-            parseTimeTaken = new Date().getTime() - start;
-            start = new Date().getTime();
+            parseTimeTaken = DateUtils.getTimeDiffFromNow(start);
+            start = DateUtils.getCurrentTime();
 
             Map<String, Integer> documentVsOccurrenceCount = countOccurrences(indexedWordDataList);
             int requiredDocumentOccurrenceCount = indexedWordDataList.size();
@@ -121,11 +122,13 @@ public class QueryHandler {
                     }
                 }
             }
-            calculationsTimeTaken = new Date().getTime() - start;
+
+            calculationsTimeTaken = DateUtils.getTimeDiffFromNow(start);
 
             logTimeStats(query, parseTimeTaken, calculationsTimeTaken);
 
             Collections.sort(queryResult);
+
             return queryResult;
         }
     }

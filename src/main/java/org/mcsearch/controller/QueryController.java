@@ -2,25 +2,28 @@ package org.mcsearch.controller;
 
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
+import org.mcsearch.utils.DateUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
-
 @RestController
 public class QueryController {
 
-    @GetMapping("/fetch-search-result")
+    @GetMapping("/search")
     public QueryAPIResponse fetchSearchResult(
             @RequestParam(value = "query") String query,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNumber,
             @RequestParam(value = "itemsPerPage", defaultValue = "10") Integer itemsPerPage) {
 
-        long start = new Date().getTime();
+        long start = DateUtils.getCurrentTime();
         IndexedWordData.QueryResult result = QueryHandler.fetchQueryResults(query, --pageNumber * itemsPerPage, itemsPerPage);
-        long end = new Date().getTime();
+        long timeTaken = DateUtils.getTimeDiffFromNow(start);
 
-        return new QueryAPIResponse(result.getDocumentResults(), result.getTotalResultsFound(), end - start);
+        if(null == result) {
+            return QueryAPIResponse.getEmptyResponse(timeTaken);
+        } else {
+            return new QueryAPIResponse(result.getDocumentResults(), result.getTotalResultsFound(), timeTaken);
+        }
     }
 }

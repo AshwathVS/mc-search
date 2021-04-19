@@ -4,7 +4,7 @@ import org.mcsearch.mapper.WordToFileMap;
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
 
-import java.io.File;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -50,9 +50,20 @@ public class StatTesting {
         }
     }
 
+    private static void performByteBasedReadTimeStats() throws IOException {
+        long start = DateUtils.getCurrentTime();
+        String file = "/home/ashwath/Documents/MapReduce Project/code/mc-search/index/base";
+        DataInputStream dataInputStream = new DataInputStream(new FileInputStream(file));
+        int totalBytes = 834757843;
+        dataInputStream.skipBytes(totalBytes - 115);
+        System.out.println(DateUtils.getTimeDiffFromNow(start));
+        System.out.println(new String(dataInputStream.readNBytes(115)));
+    }
+
     public static void main(String[] args) throws Exception {
-        WordToFileMap.buildMap();
+//        WordToFileMap.buildMap();
 //        performReadTimeStats();
-        performSearchChecks();
+//        performSearchChecks();
+        performByteBasedReadTimeStats();
     }
 }

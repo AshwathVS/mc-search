@@ -4,9 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mcsearch.search.IndexedWordData;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class QueryAPIResponse {
+    public static QueryAPIResponse getEmptyResponse(long timeTaken) {
+        return new QueryAPIResponse(Arrays.asList(), 0, timeTaken);
+    }
+
     private List<IndexedWordData.DocumentResult> queryResults;
     private int totalResultsFound;
     private long milliSecondsTaken;
