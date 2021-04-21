@@ -1,13 +1,13 @@
 package org.mcsearch.utils;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.mcsearch.mapper.WordToFileMap;
+import org.mcsearch.search.IndexedDataParser;
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class StatTesting {
     private static int randomNumber(int min, int max) {
@@ -50,14 +50,52 @@ public class StatTesting {
         }
     }
 
+    private static String read(Long offset, int limit) throws IOException {
+        DataInputStream dataInputStream = new DataInputStream(new FileInputStream("./index/base"));
+//
+        while(offset > (long) Integer.MAX_VALUE) {
+            dataInputStream.skipBytes(Integer.MAX_VALUE);
+            offset -= Integer.MAX_VALUE;
+        }
+
+        dataInputStream.skipBytes(Math.toIntExact(offset));
+
+//        long skipped = dataInputStream.skip(offset);
+
+        byte[] data = new byte[limit];
+
+        int bytesRead = dataInputStream.read(data);
+        return new String(data);
+    }
+
     private static void performByteBasedReadTimeStats() throws IOException {
-        long start = DateUtils.getCurrentTime();
-        String file = "/home/ashwath/Documents/MapReduce Project/code/mc-search/index/base";
-        DataInputStream dataInputStream = new DataInputStream(new FileInputStream(file));
-        int totalBytes = 834757843;
-        dataInputStream.skipBytes(totalBytes - 115);
-        System.out.println(DateUtils.getTimeDiffFromNow(start));
-        System.out.println(new String(dataInputStream.readNBytes(115)));
+        Map<String, Pair<Long, Integer>> wordToByteOffsetAndLimitMapping = FileUtils.readFromFile("./index/WORD_TO_BYTE_DATA");
+        List<String> keysAsArray = new ArrayList(wordToByteOffsetAndLimitMapping.keySet());
+        Collections.sort(keysAsArray);
+
+        int max = keysAsArray.size() - 1;
+        long avg = 0;
+        int iterations = 100000;
+
+        for (int i=0; i<iterations; i++) {
+//            String randomKey = "zzzvn3";
+            String randomKey = keysAsArray.get(randomNumber(0, max));
+            long start = DateUtils.getCurrentTime();
+            Pair<Long, Integer> offsetAndLimit = wordToByteOffsetAndLimitMapping.get(randomKey);
+            String line = read(offsetAndLimit.getKey(), offsetAndLimit.getValue());
+//            System.out.println(line);
+            long timeTaken = DateUtils.getTimeDiffFromNow(start);
+            if(line.indexOf("\t") == -1) System.out.println("EXCEPTION!!!!!");
+            avg += timeTaken;
+
+            if(i != 0 && i % 10000 == 0) {
+                System.out.println(i + "th iteration completed");
+                System.out.println("Current avg: " + avg/i);
+            }
+//            System.out.println("Reading " + randomKey + " took " + timeTaken + "ms");
+        }
+
+        System.out.println("Average Time: " + avg / iterations + "ms");
     }
 
     public static void main(String[] args) throws Exception {
