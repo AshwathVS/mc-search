@@ -4,17 +4,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.util.CollectionUtils;
 import org.mcsearch.utils.RedisUtils;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class IndexedWordData {
+public class IndexedWordData implements Serializable {
     private String word;
     private HashMap<String, IndexedDocumentData> indexedDocumentData;
 
     public IndexedWordData(String word, HashMap<String, IndexedDocumentData> indexedDocumentData) {
         this.word = word;
         this.indexedDocumentData = indexedDocumentData;
+    }
+
+    public IndexedWordData() {
     }
 
     public String getWord() {
@@ -29,23 +33,38 @@ public class IndexedWordData {
         return !CollectionUtils.isEmpty(this.indexedDocumentData) && this.indexedDocumentData.containsKey(documentHash);
     }
 
-    public static class IndexedDocumentData {
-        private String documentHash;
+    @JsonIgnore
+    public int getDocCount() {
+        return this.indexedDocumentData == null ? 0 : this.indexedDocumentData.size();
+    }
+
+    public void setWord(String word) {
+        this.word = word;
+    }
+
+    public void setIndexedDocumentData(HashMap<String, IndexedDocumentData> indexedDocumentData) {
+        this.indexedDocumentData = indexedDocumentData;
+    }
+
+    public static class IndexedDocumentData implements Comparable, Serializable {
+        private String documentUrl;
         private int domainRank;
         private Date publishedDate;
+        @JsonIgnore
         private List<Integer> occurrenceIndexes;
 
         public IndexedDocumentData(String documentHash, int domainRank, Date publishedDate, List<Integer> occurrenceIndexes) {
-            this.documentHash = documentHash;
+            this.documentUrl = RedisUtils.get(documentHash);
             this.domainRank = domainRank;
             this.publishedDate = publishedDate;
             this.occurrenceIndexes = occurrenceIndexes;
         }
 
-        public String getDocumentHash() {
-            return documentHash;
+        public IndexedDocumentData() {
         }
 
+        
+        
         public int getDomainRank() {
             return domainRank;
         }
@@ -57,41 +76,30 @@ public class IndexedWordData {
         public List<Integer> getOccurrenceIndexes() {
             return occurrenceIndexes;
         }
-    }
 
-    public static class DocumentResult implements Comparable {
-        private String documentHash;
-        private String documentLink;
-        private Date publishedDate;
-        private int domainRank;
-
-        public DocumentResult(IndexedDocumentData indexedDocumentData) {
-            this.documentHash = indexedDocumentData.documentHash;
-            this.documentLink = RedisUtils.get(this.documentHash);
-            this.publishedDate = indexedDocumentData.publishedDate;
-            this.domainRank = indexedDocumentData.domainRank;
+        public String getDocumentUrl() {
+            return documentUrl;
         }
 
-        @JsonIgnore
-        public String getDocumentHash() {
-            return documentHash;
+        public void setDocumentUrl(String documentUrl) {
+            this.documentUrl = documentUrl;
         }
 
-        public String getDocumentLink() {
-            return documentLink;
+        public void setDomainRank(int domainRank) {
+            this.domainRank = domainRank;
         }
 
-        public Date getPublishedDate() {
-            return publishedDate;
+        public void setPublishedDate(Date publishedDate) {
+            this.publishedDate = publishedDate;
         }
 
-        public int getDomainRank() {
-            return domainRank;
+        public void setOccurrenceIndexes(List<Integer> occurrenceIndexes) {
+            this.occurrenceIndexes = occurrenceIndexes;
         }
 
         @Override
         public int compareTo(Object o) {
-            DocumentResult dr = (DocumentResult) o;
+            IndexedDocumentData dr = (IndexedDocumentData) o;
 
             if(dr.domainRank == this.domainRank) {
                 return dr.publishedDate.compareTo(publishedDate);
@@ -102,15 +110,15 @@ public class IndexedWordData {
     }
 
     public static class QueryResult {
-        private List<DocumentResult> documentResults;
+        private List<IndexedDocumentData> documentResults;
         private int totalResultsFound;
 
-        public QueryResult(List<DocumentResult> documentResults, int totalResultsFound) {
+        public QueryResult(List<IndexedDocumentData> documentResults, int totalResultsFound) {
             this.documentResults = documentResults;
             this.totalResultsFound = totalResultsFound;
         }
 
-        public List<DocumentResult> getDocumentResults() {
+        public List<IndexedDocumentData> getDocumentResults() {
             return documentResults;
         }
 

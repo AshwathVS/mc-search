@@ -1,8 +1,6 @@
 package org.mcsearch.utils;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.mcsearch.mapper.WordToFileMap;
-import org.mcsearch.search.IndexedDataParser;
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
 
@@ -45,22 +43,19 @@ public class StatTesting {
     }
 
     private static void performSearchChecks() {
-        for(IndexedWordData.DocumentResult documentResult : QueryHandler.fetchQueryResults("news")) {
-            System.out.println(documentResult.getDocumentLink());
+        for(IndexedWordData.IndexedDocumentData documentResult : QueryHandler.fetchQueryResults("news")) {
+            System.out.println(documentResult.getDocumentUrl());
         }
     }
 
     private static String read(Long offset, int limit) throws IOException {
         DataInputStream dataInputStream = new DataInputStream(new FileInputStream("./index/base"));
-//
         while(offset > (long) Integer.MAX_VALUE) {
             dataInputStream.skipBytes(Integer.MAX_VALUE);
             offset -= Integer.MAX_VALUE;
         }
 
         dataInputStream.skipBytes(Math.toIntExact(offset));
-
-//        long skipped = dataInputStream.skip(offset);
 
         byte[] data = new byte[limit];
 
@@ -69,7 +64,7 @@ public class StatTesting {
     }
 
     private static void performByteBasedReadTimeStats() throws IOException {
-        Map<String, Pair<Long, Integer>> wordToByteOffsetAndLimitMapping = FileUtils.readFromFile("./index/WORD_TO_BYTE_DATA");
+        Map<String, Pair<Long, Integer>> wordToByteOffsetAndLimitMapping = FileUtils.readObjectFromFile("./index/WORD_TO_BYTE_DATA");
         List<String> keysAsArray = new ArrayList(wordToByteOffsetAndLimitMapping.keySet());
         Collections.sort(keysAsArray);
 
@@ -78,7 +73,6 @@ public class StatTesting {
         int iterations = 100000;
 
         for (int i=0; i<iterations; i++) {
-//            String randomKey = "zzzvn3";
             String randomKey = keysAsArray.get(randomNumber(0, max));
             long start = DateUtils.getCurrentTime();
             Pair<Long, Integer> offsetAndLimit = wordToByteOffsetAndLimitMapping.get(randomKey);

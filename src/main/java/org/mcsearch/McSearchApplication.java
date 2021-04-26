@@ -1,6 +1,6 @@
 package org.mcsearch;
 
-import org.mcsearch.mapper.WordToFileMap;
+import org.mcsearch.mapper.WordToByteMap;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -12,14 +12,13 @@ public class McSearchApplication {
 	private static final Logger logger = Logger.getLogger(McSearchApplication.class.getName());
 
 	public static void main(String[] args) {
-		ApplicationContext context = SpringApplication.run(McSearchApplication.class, args);
-		boolean success =  WordToFileMap.buildMap();
+		boolean success = WordToByteMap.loadMap();
 
 		if(success) {
-			logger.info("Mapping successfully loaded");
+			logger.info("Mapping successfully loaded, starting application");
+			ApplicationContext context = SpringApplication.run(McSearchApplication.class, args);
 		} else {
-			logger.severe("Unable to load cache mapping, please verify the folder exists. Exiting the application");
-			SpringApplication.exit(context);
+			logger.severe("Unable to find necessary index files, try again");
 		}
 	}
 }

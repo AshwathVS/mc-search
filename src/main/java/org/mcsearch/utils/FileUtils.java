@@ -73,7 +73,7 @@ public class FileUtils {
         return line;
     }
 
-    public static void writeToFile(String filePath, Object o) {
+    public static void writeObjectToFile(String filePath, Object o) {
         try {
             File fileOne = new File(filePath);
             FileOutputStream fos = new FileOutputStream(fileOne);
@@ -88,7 +88,7 @@ public class FileUtils {
         }
     }
 
-    public static <T> T readFromFile(String filePath) {
+    public static <T> T readObjectFromFile(String filePath) {
         try {
             File toRead = new File(filePath);
             FileInputStream fis = new FileInputStream(toRead);

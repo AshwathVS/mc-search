@@ -1,8 +1,8 @@
 package org.mcsearch.search;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.mcsearch.mapper.WordToFileMap;
-import org.mcsearch.mapper.WordToFileMapBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mcsearch.mapper.WordToByteMap;
 import org.mcsearch.utils.DateUtils;
 import org.mcsearch.utils.FileUtils;
 import org.mcsearch.utils.StringUtils;
@@ -10,17 +10,21 @@ import org.mcsearch.utils.StringUtils;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.logging.Logger;
+
 
 public class IndexedDataParser {
-    private static final String DOCUMENT_DATA_DELIMITER = "@@@";
+    private static final String DOCUMENT_DATA_DELIMITER = "@";
     private static final String INDEX_DELIMITER = ",";
     private static final String TAB_DELIMITER = "\t";
     private static final String PIPE_DELIMITER = "\\|";
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    private static final Logger logger = Logger.getLogger(IndexedDataParser.class.toString());
 
     private static IndexedWordData parseInvertedIndexString(String invertedIndex, String word) {
-        String[] documentDataList = invertedIndex.split(TAB_DELIMITER)[1].split(INDEX_DELIMITER);
+        if(org.apache.commons.lang3.StringUtils.isEmpty(invertedIndex)) return null;
 
+        String[] documentDataList = invertedIndex.split(TAB_DELIMITER)[1].split(INDEX_DELIMITER);
         HashMap<String, IndexedWordData.IndexedDocumentData> indexedDocumentDataMap = new HashMap<>();
 
         for(String documentData : documentDataList) {
@@ -38,25 +42,42 @@ public class IndexedDataParser {
         return new IndexedWordData(word, indexedDocumentDataMap);
     }
 
-    public static IndexedWordData parseInvertedIndexForWord(String word) {
-        Pair<String, Integer> fileToLineInfo = WordToFileMap.getWordToFileLineInfo(word);
+    public static IndexedWordData getParsedInvertedIndex(String word) {
+        long start = DateUtils.getCurrentTime();
+        String invertedIndexLine = WordToByteMap.readInvertedIndex(word);
+        long readTime = DateUtils.getTimeDiffFromNow(start);
 
-        if (null == fileToLineInfo) return null;
-        else {
-            String fileName = fileToLineInfo.getKey();
-            int lineNumber = fileToLineInfo.getValue();
+        start = DateUtils.getCurrentTime();
+        IndexedWordData indexedWordData = parseInvertedIndexString(invertedIndexLine, word);
+        long parseTime = DateUtils.getTimeDiffFromNow(start);
 
-            String invertedIndex = FileUtils.readNthLine(WordToFileMapBuilder.INDEX_FOLDER + fileName, lineNumber);
-            return parseInvertedIndexString(invertedIndex, word);
-        }
+        logger.info("Stats for <" + word + ">: Read (" + readTime + "ms), Parse (" + parseTime + "ms)");
+
+        return indexedWordData;
     }
 
-    public static void main(String[] args) {
-        WordToFileMap.buildMap();
-        IndexedWordData german = parseInvertedIndexForWord("Germany");
-        IndexedWordData hello = parseInvertedIndexForWord("hello");
-        IndexedWordData index = parseInvertedIndexForWord("index");
-        IndexedWordData Index = parseInvertedIndexForWord("Index");
-        System.out.println("BUBYEE");
+    private static void convertToJSON(String jsonString) throws JsonProcessingException {
+        int sum = 0;
+        int iter = 1;
+        ObjectMapper objectMapper = new ObjectMapper();
+        for(int i=0; i<iter; i++) {
+            long start = DateUtils.getCurrentTime();
+            IndexedWordData indexedWordData = objectMapper.readValue(jsonString, IndexedWordData.class);
+            sum += DateUtils.getTimeDiffFromNow(start);
+        }
+        System.out.println("Json conversion: " + sum / iter + "ms");
+    }
+
+    public static void main(String[] args) throws Exception {
+        WordToByteMap.loadMap();
+        IndexedWordData german = getParsedInvertedIndex("Germany");
+        IndexedWordData hello = getParsedInvertedIndex("news");
+        IndexedWordData Index = getParsedInvertedIndex("Index");
+
+        FileUtils.writeObjectToFile("./cache/tmp", hello);
+
+        for(int i=0; i<10; i++) {
+            convertToJSON(new ObjectMapper().writeValueAsString(hello));
+        }
     }
 }

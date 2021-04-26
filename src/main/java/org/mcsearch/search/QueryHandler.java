@@ -1,5 +1,6 @@
 package org.mcsearch.search;
 
+import org.mcsearch.cache.PostingListCacheLayer;
 import org.mcsearch.utils.DateUtils;
 import org.springframework.util.CollectionUtils;
 import org.mcsearch.utils.BinarySearchUtils;
@@ -11,19 +12,62 @@ import java.util.logging.Logger;
 public class QueryHandler {
     private static final Logger logger = Logger.getLogger(QueryHandler.class.getName());
 
-    private static Map<String, Integer> countOccurrences(List<IndexedWordData> indexedWordDataList) {
-        Map<String, Integer> occurrences = new HashMap<>();
-        for(IndexedWordData indexedWordData : indexedWordDataList) {
-            for (String documentHash : indexedWordData.getIndexedDocumentData().keySet()) {
-                if(occurrences.containsKey(documentHash)) {
-                    occurrences.put(documentHash, occurrences.get(documentHash) + 1);
-                } else {
-                    occurrences.put(documentHash, 1);
+    private static List<IndexedWordData.IndexedDocumentData> checkDocumentIntersectionAndPositionalIndexCheck(List<IndexedWordData> indexedWordDataList, int requiredDocumentSize, boolean isStrict) {
+        List<IndexedWordData.IndexedDocumentData> queryResult = new ArrayList<>();
+
+        IndexedWordData indexedWordDataWithLeastDocCount = indexedWordDataList.get(0);
+        for(IndexedWordData indexedWordData: indexedWordDataList) {
+            if(indexedWordData.getDocCount() < indexedWordDataWithLeastDocCount.getDocCount()) indexedWordDataWithLeastDocCount = indexedWordData;
+        }
+
+        for(Map.Entry<String, IndexedWordData.IndexedDocumentData> document : indexedWordDataWithLeastDocCount.getIndexedDocumentData().entrySet()) {
+            boolean docPresentInAllWords = true;
+            String documentHash = document.getKey();
+
+            for(IndexedWordData indexedWordData : indexedWordDataList) {
+                docPresentInAllWords = indexedWordData.isDocumentPresent(documentHash);
+
+                if(!docPresentInAllWords) break;
+            }
+
+            if(docPresentInAllWords) {
+                List<IndexedWordData.IndexedDocumentData> documentSpecificIndexedWordData = new ArrayList<>();
+
+                for(IndexedWordData iwd : indexedWordDataList) {
+                    documentSpecificIndexedWordData.add(iwd.getIndexedDocumentData().get(documentHash));
+                }
+
+                if(checkIndexOccurrences(documentSpecificIndexedWordData, isStrict)) {
+                    queryResult.add(documentSpecificIndexedWordData.get(0));
                 }
             }
         }
 
-        return occurrences;
+
+//        Map<String, Integer> occurrences = new HashMap<>();
+//        for(IndexedWordData indexedWordData : indexedWordDataList) {
+//            for (String documentHash : indexedWordData.getIndexedDocumentData().keySet()) {
+//                if(occurrences.containsKey(documentHash)) {
+//                    occurrences.put(documentHash, occurrences.get(documentHash) + 1);
+//                } else {
+//                    occurrences.put(documentHash, 1);
+//                }
+//
+//                if(occurrences.get(documentHash) == requiredDocumentSize) {
+//                    List<IndexedWordData.IndexedDocumentData> documentSpecificIndexedWordData = new ArrayList<>();
+//
+//                    for(IndexedWordData iwd : indexedWordDataList) {
+//                        documentSpecificIndexedWordData.add(iwd.getIndexedDocumentData().get(documentHash));
+//                    }
+//
+//                    if(checkIndexOccurrences(documentSpecificIndexedWordData, isStrict)) {
+//                        queryResult.add(documentSpecificIndexedWordData.get(0));
+//                    }
+//                }
+//            }
+//        }
+
+        return queryResult;
     }
 
     private static boolean performStrictPositionalIndexCheck(List<IndexedWordData.IndexedDocumentData> indexedDocumentDataList) {
@@ -41,7 +85,7 @@ public class QueryHandler {
                 }
             }
 
-            overallResult |= intermediateResult;
+            overallResult = intermediateResult;
 
         }
         return overallResult;
@@ -63,21 +107,21 @@ public class QueryHandler {
         if (indexedWordDataList.size() == 1) return true;
         else {
             if (isStrict) return performStrictPositionalIndexCheck(indexedWordDataList);
-            else return performPositionalIndexCheck(indexedWordDataList);
+            else return true;
         }
     }
 
     public static IndexedWordData.QueryResult fetchQueryResults(String query, int offset, int fetch) {
-        List<IndexedWordData.DocumentResult> queryResultList = fetchQueryResults(query);
+        List<IndexedWordData.IndexedDocumentData> queryResultList = fetchQueryResults(query);
 
         if(queryResultList.size() < offset) return null;
         else {
-            List<IndexedWordData.DocumentResult> subQueryList = queryResultList.subList(offset, Math.min(offset + fetch, queryResultList.size()));
+            List<IndexedWordData.IndexedDocumentData> subQueryList = queryResultList.subList(offset, Math.min(offset + fetch, queryResultList.size()));
             return new IndexedWordData.QueryResult(subQueryList, queryResultList.size());
         }
     }
 
-    public static List<IndexedWordData.DocumentResult> fetchQueryResults(String query) {
+    public static List<IndexedWordData.IndexedDocumentData> fetchQueryResults(String query) {
         query = query.toLowerCase();
 
         QueryTokenizer.QueryTokenizedResult tokenizedResult = QueryTokenizer.tokenizeQuery(query);
@@ -87,58 +131,37 @@ public class QueryHandler {
             logger.info("No results found for <" + query + ">");
             return List.of();
         } else {
-            List<IndexedWordData.DocumentResult> queryResult = new ArrayList<>();
             List<IndexedWordData> indexedWordDataList = new ArrayList<>(tokenizedResult.getTokenCount());
 
-            long parseTimeTaken, calculationsTimeTaken;
+            long calculationsTimeTaken;
 
-            long start = DateUtils.getCurrentTime();
             for(String token : tokenizedResult.getTokens()) {
                 if (!StopWords.isStopWord(token)) {
-                    IndexedWordData indexedWordData = IndexedDataParser.parseInvertedIndexForWord(token);
-                    if(null != indexedWordData) {
-                        indexedWordDataList.add(indexedWordData);
-                    }
+                    IndexedWordData indexedWordData = PostingListCacheLayer.get(token);
+                    if(null == indexedWordData) return Collections.emptyList();
+                    indexedWordDataList.add(indexedWordData);
                 }
             }
 
-            parseTimeTaken = DateUtils.getTimeDiffFromNow(start);
-            start = DateUtils.getCurrentTime();
+            long start = DateUtils.getCurrentTime();
 
-            Map<String, Integer> documentVsOccurrenceCount = countOccurrences(indexedWordDataList);
-            int requiredDocumentOccurrenceCount = indexedWordDataList.size();
-
-            for(Map.Entry<String, Integer> docVsOccCountEntry : documentVsOccurrenceCount.entrySet()) {
-                if(requiredDocumentOccurrenceCount == docVsOccCountEntry.getValue()) {
-                    String docHash = docVsOccCountEntry.getKey();
-                    List<IndexedWordData.IndexedDocumentData> documentSpecificIndexedWordData = new ArrayList<>();
-
-                    for(IndexedWordData iwd : indexedWordDataList) {
-                        documentSpecificIndexedWordData.add(iwd.getIndexedDocumentData().get(docHash));
-                    }
-
-                    if(checkIndexOccurrences(documentSpecificIndexedWordData, isStrict)) {
-                        queryResult.add(new IndexedWordData.DocumentResult(documentSpecificIndexedWordData.get(0)));
-                    }
-                }
-            }
+            List<IndexedWordData.IndexedDocumentData> queryResult = checkDocumentIntersectionAndPositionalIndexCheck(indexedWordDataList, indexedWordDataList.size(), isStrict);
 
             calculationsTimeTaken = DateUtils.getTimeDiffFromNow(start);
+            logTimeStats(query, calculationsTimeTaken);
 
-            logTimeStats(query, parseTimeTaken, calculationsTimeTaken);
-
+            long sortTimeStart = DateUtils.getCurrentTime();
             Collections.sort(queryResult);
+            logger.info("Sorting took: " + DateUtils.getTimeDiffFromNow(sortTimeStart) + "ms");
 
             return queryResult;
         }
     }
 
-    private static void logTimeStats(String query, long parseTimeTaken, long calculationsTimeTaken) {
+    private static void logTimeStats(String query, long calculationsTimeTaken) {
         logger.info(
                 "\n" +
                         "Stats for <" + query + ">" +
-                        "\n" +
-                        "Reading and parsing inverted index file took " + parseTimeTaken + "ms" +
                         "\n" +
                         "Post parse calculations took " + calculationsTimeTaken + "ms"
         );

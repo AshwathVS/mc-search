@@ -12,18 +12,18 @@ public class QueryAPIResponse {
         return new QueryAPIResponse(Arrays.asList(), 0, timeTaken);
     }
 
-    private List<IndexedWordData.DocumentResult> queryResults;
+    private List<IndexedWordData.IndexedDocumentData> queryResults;
     private int totalResultsFound;
     private long milliSecondsTaken;
 
-    public QueryAPIResponse(List<IndexedWordData.DocumentResult> queryResults, int totalResultsFound, long milliSecondsTaken) {
+    public QueryAPIResponse(List<IndexedWordData.IndexedDocumentData> queryResults, int totalResultsFound, long milliSecondsTaken) {
         this.queryResults = queryResults;
         this.totalResultsFound = totalResultsFound;
         this.milliSecondsTaken = milliSecondsTaken;
     }
 
     @JsonProperty("results")
-    public List<IndexedWordData.DocumentResult> getQueryResults() {
+    public List<IndexedWordData.IndexedDocumentData> getQueryResults() {
         return queryResults;
     }
 
