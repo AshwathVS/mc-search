@@ -1,5 +1,6 @@
 package org.mcsearch.utils;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
@@ -92,10 +93,20 @@ public class StatTesting {
         System.out.println("Average Time: " + avg / iterations + "ms");
     }
 
+    public static void performSetReadInRedis() {
+        long start = DateUtils.getCurrentTime();
+
+        for (int i = 0; i < 1; i++) {
+            RedisUtils.getInvalidatedDocuments();
+        }
+        System.out.println(DateUtils.getTimeDiffFromNow(start));
+    }
+
     public static void main(String[] args) throws Exception {
 //        WordToFileMap.buildMap();
 //        performReadTimeStats();
 //        performSearchChecks();
-        performByteBasedReadTimeStats();
+//        performByteBasedReadTimeStats();
+//        performSetReadInRedis();
     }
 }
