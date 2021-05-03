@@ -1,11 +1,12 @@
 package org.mcsearch.controller;
 
+import org.mcsearch.cache.PostingListCacheLayer;
 import org.mcsearch.search.IndexedWordData;
 import org.mcsearch.search.QueryHandler;
 import org.mcsearch.utils.DateUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class QueryController {
@@ -25,5 +26,11 @@ public class QueryController {
         } else {
             return new QueryAPIResponse(result.getDocumentResults(), result.getTotalResultsFound(), timeTaken);
         }
+    }
+
+    @PostMapping("/clear-cache")
+    public ResponseEntity<String> clearCacheForWords(@RequestBody ClearCacheRequestBody clearCacheRequestBody) {
+        PostingListCacheLayer.clearKeysFromCache(clearCacheRequestBody.getWordsToClearFromCache());
+        return new ResponseEntity<>("Ok", HttpStatus.OK);
     }
 }

@@ -47,7 +47,7 @@ public class IndexedDataParser {
         iterateAndAddWordDataToList(documentDataList, indexedDocumentDataMap);
 
         if(!org.apache.commons.lang3.StringUtils.isEmpty(cachedInvertedIndex)) {
-            String[] cachedDataList = cachedInvertedIndex.split(TAB_DELIMITER)[1].split(INDEX_DELIMITER);
+            String[] cachedDataList = cachedInvertedIndex.split(INDEX_DELIMITER);
             iterateAndAddWordDataToList(cachedDataList, indexedDocumentDataMap);
         }
 

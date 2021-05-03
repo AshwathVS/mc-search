@@ -34,4 +34,9 @@ public class LRUCache<K, V> implements ICache<K, V> {
         if(containsKey(key)) return this.cache.get(key);
         else return null;
     }
+
+    @Override
+    public void removeKey(K key) {
+        if(this.cache.containsKey(key)) this.cache.remove(key);
+    }
 }

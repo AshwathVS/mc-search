@@ -3,6 +3,7 @@ package org.mcsearch.cache;
 import org.mcsearch.search.IndexedDataParser;
 import org.mcsearch.search.IndexedWordData;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 public class PostingListCacheLayer {
@@ -25,6 +26,13 @@ public class PostingListCacheLayer {
             if(null != indexedWordData) postingListCache.put(word, indexedWordData);
 
             return indexedWordData;
+        }
+    }
+
+    public static void clearKeysFromCache(List<String> keys) {
+        logger.info("Clearing following keys from cache: " + keys);
+        for(String key : keys) {
+            postingListCache.removeKey(key);
         }
     }
 

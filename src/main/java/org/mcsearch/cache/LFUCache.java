@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 public class LFUCache<K, V> implements ICache<K, V> {
-    HashMap<K, V> cache;
-    HashMap<Integer, LinkedHashSet<K>> countVsKeyListMap;
-    HashMap<K, Integer> countMap;
+    private HashMap<K, V> cache;
+    private HashMap<Integer, LinkedHashSet<K>> countVsKeyListMap;
+    private HashMap<K, Integer> countMap;
 
     int cap;
     int min = -1;
@@ -59,6 +59,11 @@ public class LFUCache<K, V> implements ICache<K, V> {
         countMap.put(key, 1);
         min = 1;
         countVsKeyListMap.get(1).add(key);
+    }
+
+    @Override
+    public void removeKey(K key) {
+        return; // TODO: Find out a algorithm which performs cache evict calls
     }
 
     @Override

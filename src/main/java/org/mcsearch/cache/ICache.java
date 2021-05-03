@@ -7,4 +7,6 @@ public interface ICache<K, V> {
     boolean containsKey(K key);
 
     V get(K key);
+
+    void removeKey(K key);
 }
